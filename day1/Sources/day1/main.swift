@@ -1,4 +1,3 @@
-import Foundation
 import AocUtils
 
 func part1(expenseReport: [UInt64], requiredSum: UInt64) -> UInt64? {
