@@ -1,19 +1,9 @@
 import Foundation
+import AocUtils
 
-func inputGet() -> [UInt64] {
-    let fileName = CommandLine.argc == 1 ? "input" : CommandLine.arguments[1]
-    let cwdURL = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
-    let fileURL = URL(fileURLWithPath: fileName, relativeTo: cwdURL).appendingPathExtension("txt")
-    let content = try! String(contentsOf: fileURL, encoding: String.Encoding.utf8)
-    return content.components(separatedBy: "\n").filter { $0.length > 0 }.map { UInt64($0)! }
-}
-
-let input = inputGet()
-let requiredSum = 2020
-
-func part1(expenseReport: [UInt64]) -> UInt64? {
-    for (i, x) in input.enumerated() {
-        for y in input[(i+1)...] {
+func part1(expenseReport: [UInt64], requiredSum: UInt64) -> UInt64? {
+    for (i, x) in expenseReport.enumerated() {
+        for y in expenseReport[(i+1)...] {
             if x + y == requiredSum {
                 return x * y
             }
@@ -22,10 +12,10 @@ func part1(expenseReport: [UInt64]) -> UInt64? {
     return nil
 }
 
-func part2(expenseReport: [UInt64]) -> UInt64?  {
-    for (i, x) in input.enumerated() {
-        for (j, y) in input[(i+1)...].enumerated() {
-            for z in input[(j+1)...] {
+func part2(expenseReport: [UInt64], requiredSum: UInt64) -> UInt64?  {
+    for (i, x) in expenseReport.enumerated() {
+        for (j, y) in expenseReport[(i+1)...].enumerated() {
+            for z in expenseReport[(j+1)...] {
                 if x + y + z == requiredSum {
                     return x * y * z
                 }
@@ -35,5 +25,6 @@ func part2(expenseReport: [UInt64]) -> UInt64?  {
     return nil
 }
 
-print("🌟 Part 1 : \(part1(expenseReport: input)!)")
-print("🌟 Part 2 : \(part2(expenseReport: input)!)")
+let input = inputGet().map { UInt64($0)! }
+print("🌟 Part 1 : \(part1(expenseReport: input, requiredSum: 2020)!)")
+print("🌟 Part 2 : \(part2(expenseReport: input, requiredSum: 2020)!)")

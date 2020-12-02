@@ -1,0 +1,16 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "AocUtils",
+        "repositoryURL": "/home/kjonsson/advent-of-code-2020/AocUtils",
+        "state": {
+          "branch": null,
+          "revision": "f2a862f4e93db4e656e6c220ae78bebe116398e0",
+          "version": "1.0.0"
+        }
+      }
+    ]
+  },
+  "version": 1
+}
