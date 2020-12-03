@@ -3,7 +3,7 @@
     "pins": [
       {
         "package": "AocUtils",
-        "repositoryURL": "/home/kjonsson/advent-of-code-2020/AocUtils",
+        "repositoryURL": "https://github.com/kjn-void/AocUtils.git",
         "state": {
           "branch": null,
           "revision": "e32b36427cecd35d6bcff3f7f687edfdad5d533e",
