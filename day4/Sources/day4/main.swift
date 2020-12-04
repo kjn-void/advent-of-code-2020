@@ -10,6 +10,15 @@ enum Field: String, CaseIterable {
 
 typealias Passport = Dictionary<Field, String>
 
+extension String {
+    func isIntIn(range: ClosedRange<Int>) -> Bool {
+        guard let n = Int(self) else {
+            return false
+        }
+        return range.contains(n)
+    }
+}
+
 func fieldMake(repr: String) -> (Field, String) {
     let kv = repr.split(separator: ":")
     return (Field(rawValue: String(kv.first!))!, String(kv.last!))
@@ -26,35 +35,24 @@ func isValid1(passport: Passport) -> Bool {
 
 func isValid2(passport: Passport) -> Bool {
     return isValid1(passport: passport)
-      && isInRange(passport[.byr]!, min: 1920, max: 2002)
-      && isInRange(passport[.iyr]!, min: 2010, max: 2020)
-      && isInRange(passport[.eyr]!, min: 2020, max: 2030)
+      && passport[.byr]!.isIntIn(range: 1920...2002)
+      && passport[.iyr]!.isIntIn(range: 2010...2020)
+      && passport[.eyr]!.isIntIn(range: 2020...2030)
       && isHgtValid(passport[.hgt]!)
       && isHclValid(passport[.hcl]!)
       && isEclValid(passport[.ecl]!)
       && isPidValid(passport[.pid]!)
 }
 
-func isInRange(_ val: String, min: Int, max: Int) -> Bool {
-    if let n = Int(val) {
-        return n >= min && n <= max
-    }
-    return false
-}
-
 func isHgtValid(_ val: String) -> Bool {
-    if let height = Int(val.dropLast(2)) {
-        let suffix = String(val.suffix(2))
-        return (suffix == "cm" && height >= 150 && height <= 193)
-          || (suffix == "in" && height >= 59 && height <= 76)
-    }
-    return false
+    let grps = val.groups(re: "^(\\d+)(cm|in)$")
+    return (grps.count == 3)
+      && (grps[2] == "cm" && grps[1].isIntIn(range: 150...193)
+            || grps[2] == "in" && grps[1].isIntIn(range: 59...76))
 }
 
 func isHclValid(_ val: String) -> Bool {
-    let prefix = String(val.prefix(1))
-    let hexnum = UInt64(val.dropFirst(1), radix: 16)
-    return prefix == "#" && hexnum != nil
+    return val.match(re: "^#[0-9a-f]{6}$")
 }
 
 func isEclValid(_ val: String) -> Bool {
@@ -62,7 +60,7 @@ func isEclValid(_ val: String) -> Bool {
 }
 
 func isPidValid(_ val: String) -> Bool {
-    return val.count == 9 && UInt64(val) != nil
+    return val.match(re: "^\\d{9}$")
 }
 
 let passports = recordsGet().map{ passportMake(record: $0) }
