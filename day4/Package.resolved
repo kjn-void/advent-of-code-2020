@@ -1,0 +1,16 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "AocUtils",
+        "repositoryURL": "https://github.com/kjn-void/AocUtils.git",
+        "state": {
+          "branch": null,
+          "revision": "7fa731c70d6d71111427bbfacebc94507f8bed46",
+          "version": "1.1.0"
+        }
+      }
+    ]
+  },
+  "version": 1
+}
