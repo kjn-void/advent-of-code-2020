@@ -5,18 +5,21 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define FIELD_CNT 8
+typedef enum {
+    BYR, IYR, EYR, HGT, HCL, ECL, PID, CID, NUM_FIELDS
+} field_id_t;
 
-typedef int (*is_valid_fn)(const char *val);
-
-typedef struct passport {
-    uint8_t      valid;
-    const char * val[FIELD_CNT];
-} passport_t;
+const char * fields[] = {
+    "byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid", "cid"
+};
 
 const char * ecls[] = {
     "amb", "blu", "brn", "gry", "grn", "hzl", "oth", NULL
 };
+
+typedef struct {
+    const char * fields[NUM_FIELDS];
+} passport_t;
 
 int check_byr(const char *val) {
     int n = atoi(val);
@@ -42,15 +45,12 @@ int check_hgt(const char *val) {
 
 int check_hcl(const char *val) {
     const char *v = val + 1;
-    if (strlen(val) != 7 || *val != '#') {
-        return 0;
-    }
     while (v - val < 7) {
         if (!isxdigit(*v++)) {
             return 0;
         }
     }
-    return 1;
+    return *val == '#';
 }
 
 int check_ecl(const char *val) {
@@ -73,20 +73,6 @@ int check_cid(const char *val) {
     return 1;
 }
 
-const struct {
-    const char *repr;
-    is_valid_fn is_valid;
-} field_map[] = {
-    { "byr", check_byr },
-    { "iyr", check_iyr },
-    { "eyr", check_eyr },
-    { "hgt", check_hgt },
-    { "hcl", check_hcl },
-    { "ecl", check_ecl },
-    { "pid", check_pid },
-    { "cid", check_cid },
-};
-
 size_t passport_cnt(char *input) {
     size_t cnt = 0;
     size_t offset = 0;
@@ -100,28 +86,23 @@ size_t passport_cnt(char *input) {
     return cnt + 1;
 }
 
-uint8_t field_idx(const char *repr) {
-    for (uint8_t i = 0; i < FIELD_CNT; i++) {
-        if (strncmp(field_map[i].repr, repr, 3) == 0) {
+field_id_t field_id(const char *repr) {
+    for (field_id_t i = 0; i < NUM_FIELDS; i++) {
+        if (strncmp(fields[i], repr, strlen(fields[i])) == 0) {
             return i;
         }
     }
     assert(0);
-    return 0;
+    return -1;
 }
 
-passport_t passport_make(char **req) {
-    passport_t passport;
+void passport_make(passport_t *passport, char **req) {
     size_t req_len = strlen(*req);
 
-    memset(&passport, 0, sizeof passport);
     for (char *tok = strtok(*req, " \n"); tok != NULL; tok = strtok(NULL, " \n")) {
-        uint8_t id = field_idx(tok);
-        passport.val[id] = tok + 4;
-        passport.valid |= (1 << id);
+        passport->fields[field_id(tok)] = tok + 4;
     }
     *req = *req + req_len + 1;
-    return passport;
 }
 
 passport_t * passports_make(char *input, size_t *cnt) {
@@ -129,7 +110,7 @@ passport_t * passports_make(char *input, size_t *cnt) {
     passport_t * passports = calloc(sizeof(passport_t), *cnt);
 
     for (size_t i = 0; i < *cnt; i++) {
-        passports[i] = passport_make(&input);
+        passport_make(passports + i, &input);
     }
 
     return passports;
@@ -146,27 +127,31 @@ char * input_get() {
     return input;
 }
 
-size_t valid_1(const passport_t *passports, size_t cnt) {
-    size_t n = 0;
-    for (size_t i = 0; i < cnt; i++) {
-        n += (passports[i].valid & 0x7f) == 0x7f;
+int check_fields(const passport_t *passport) {
+    for (field_id_t i = 0; i < CID; i++) {
+        if (passport->fields[i] == NULL) {
+            return 0;
+        }
     }
-    return n;
+    return 1;
 }
 
-size_t valid_2(const passport_t *passports, size_t cnt) {
-    size_t n = 0;
-    for (size_t i = 0; i < cnt; i++) {
-        int valid = (passports[i].valid & 0x7f) == 0x7f;
-        const passport_t *p = passports + i;
-        for (uint8_t field = 0; field < FIELD_CNT; field++) {
-            if (p->valid & (1 << field)) {
-                valid &= field_map[field].is_valid(p->val[field]);
-            }
-        }
-        n += valid;
-    }
-    return n;
+size_t valid_1(const passport_t *passport, ssize_t idx) {
+    return idx < 0 ? 0
+        : check_fields(passport) + valid_1(passport + 1, idx - 1);
+}
+
+size_t valid_2(const passport_t *passport, ssize_t idx) {
+    return idx < 0 ? 0
+        : (valid_2(passport + 1, idx - 1)
+           + (check_fields(passport)
+              && check_byr(passport->fields[BYR])
+              && check_iyr(passport->fields[IYR])
+              && check_eyr(passport->fields[EYR])
+              && check_hgt(passport->fields[HGT])
+              && check_hcl(passport->fields[HCL])
+              && check_ecl(passport->fields[ECL])
+              && check_pid(passport->fields[PID])));
 }
 
 int main() {
@@ -174,8 +159,8 @@ int main() {
     size_t num_passports;
     passport_t * passports = passports_make(input, &num_passports);
 
-    printf("Part 1 : %ld\n", valid_1(passports, num_passports));
-    printf("Part 2 : %ld\n", valid_2(passports, num_passports));
+    printf("Part 1 : %ld\n", valid_1(passports, num_passports - 1));
+    printf("Part 2 : %ld\n", valid_2(passports, num_passports - 1));
 
     free(passports);
     free(input);
