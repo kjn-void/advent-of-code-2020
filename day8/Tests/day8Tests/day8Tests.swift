@@ -1,7 +1,7 @@
 import XCTest
 import class Foundation.Bundle
 
-final class day6Tests: XCTestCase {
+final class day8Tests: XCTestCase {
     func testExample() throws {
         // This is an example of a functional test case.
         // Use XCTAssert and related functions to verify your tests produce the correct
@@ -12,10 +12,10 @@ final class day6Tests: XCTestCase {
             return
         }
 
-        let day6Binary = productsDirectory.appendingPathComponent("day6")
+        let day8Binary = productsDirectory.appendingPathComponent("day8")
 
         let process = Process()
-        process.executableURL = day6Binary
+        process.executableURL = day8Binary
         process.arguments = [ "test" ]
 
         let pipe = Pipe()
@@ -27,8 +27,8 @@ final class day6Tests: XCTestCase {
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
         let output = String(data: data, encoding: .utf8)
 
-        XCTAssertTrue(output!.contains("Part 1 : 11"))
-        XCTAssertTrue(output!.contains("Part 2 : 6"))
+        XCTAssertTrue(output!.contains("Part 1 : 5"))
+        XCTAssertTrue(output!.contains("Part 2 : 8"))
     }
 
     /// Returns path to the built products directory.

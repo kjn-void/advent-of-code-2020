@@ -27,11 +27,8 @@ final class day7Tests: XCTestCase {
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
         let output = String(data: data, encoding: .utf8)
 
-        XCTAssertEqual(output, """
-                                 🌟 Part 1 : 4
-                                 🌟 Part 2 : 32
-
-                                 """)
+        XCTAssertTrue(output!.contains("Part 1 : 4"))
+        XCTAssertTrue(output!.contains("Part 2 : 32"))
     }
 
     /// Returns path to the built products directory.
