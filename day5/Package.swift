@@ -5,6 +5,9 @@ import PackageDescription
 
 let package = Package(
     name: "day5",
+    platforms: [
+      .macOS(.v10_11),
+    ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
         .package(url: "https://github.com/kjn-void/AocUtils.git", from: "1.1.0"),
