@@ -1,0 +1,25 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "AocUtils",
+        "repositoryURL": "https://github.com/kjn-void/AocUtils.git",
+        "state": {
+          "branch": null,
+          "revision": "af9cacff3cbd0746fa2cf840ffb2761f8b4d9bf6",
+          "version": "1.2.0"
+        }
+      },
+      {
+        "package": "BigNumber",
+        "repositoryURL": "https://github.com/mkrd/Swift-BigInt.git",
+        "state": {
+          "branch": null,
+          "revision": "9454066da1ed55fb976bda252b7060dbd659e61a",
+          "version": "2.1.1"
+        }
+      }
+    ]
+  },
+  "version": 1
+}

@@ -11,6 +11,14 @@
             "program": "${workspaceFolder}/day2/.build/debug/day2",
             "args": [],
             "cwd": "${workspaceFolder}/day2"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "day13",
+            "program": "${workspaceFolder}/day13/.build/debug/day13",
+            "args": [],
+            "cwd": "${workspaceFolder}/day13"
         }
     ]
 }
