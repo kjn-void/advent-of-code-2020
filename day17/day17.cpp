@@ -16,27 +16,14 @@ class Pos4D {
 public:
     Pos4D(int _x, int _y, int _z = 0, int _w = 0) : x(_x), y(_y), z(_z), w(_w) { }
 
-    std::vector<Pos4D> neighborsGet(bool fourDim = true) const {
-        std::vector<Pos4D> neigh;
-
-	for (int dw = -1; dw <= 1; dw++) {
-	    for (int dz = -1; dz <= 1; dz++) {
-		for (int dy = -1; dy <= 1; dy++) {
-		    for (int dx = -1; dx <= 1; dx++) {
-			if (dx != 0 || dy != 0 || dz != 0 || dw != 0) {
-			    neigh.push_back(Pos4D(x + dx, y + dy, z + dz, w + dw));
-			}
-		    }
-		}
-	    }
-	}
-	return neigh;
-    }
-
     bool operator==(const Pos4D &rhs) const {
 	return x == rhs.x && y == rhs.y && z == rhs.z && w == rhs.w;
     }
 
+    Pos4D operator+(const Pos4D &rhs) const {
+	return Pos4D(x + rhs.x, y + rhs.y, z + rhs.z, w + rhs.w);
+    }
+    
     friend class std::hash<Pos4D>;
 };
 
@@ -69,6 +56,7 @@ class World {
     range zLim = range(0, 0);
     range wLim = range(0, 0);
     bool haveFourDim = false;
+    std::vector<Pos4D> neighborOffsets;
 
 public:
     World(const std::vector<std::string> &initialState, bool useForthDim = false) {
@@ -85,15 +73,26 @@ public:
 		}
 	    }
 	}
+
+	for (int dw = (useForthDim ? -1 : 0); dw <= (useForthDim ? 1 : 0); dw++) {
+	    for (int dz = -1; dz <= 1; dz++) {
+		for (int dy = -1; dy <= 1; dy++) {
+		    for (int dx = -1; dx <= 1; dx++) {
+			if (dx != 0 || dy != 0 || dz != 0 || dw != 0) {
+			    neighborOffsets.push_back(Pos4D(dx, dy, dz, dw));
+			}
+		    }
+		}
+	    }
+	}
     }
 
     int neighborCount(const Pos4D &center) const {
-	const auto neighbors = center.neighborsGet();
-	return std::accumulate(neighbors.begin(),
-			       neighbors.end(),
+	return std::accumulate(neighborOffsets.begin(),
+			       neighborOffsets.end(),
 			       0,
-			       [this](int cnt, const Pos4D &pos) {
-				   return cnt + (activeCubes.count(pos) > 0 ? 1 : 0);
+			       [&](int cnt, const Pos4D &offset) {
+				   return cnt + (activeCubes.count(offset + center) > 0 ? 1 : 0);
 			       });
     }
 
