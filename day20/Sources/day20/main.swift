@@ -69,8 +69,9 @@ class Tile {
                 }
             }
         }
-        edges = [bitReverse(left), top, right, bitReverse(bottom),
-                 left, bitReverse(top), bitReverse(right), bottom ]
+        edges = [left, top, right, bottom,
+                 bitReverse(left), bitReverse(top),
+		 bitReverse(right), bitReverse(bottom) ]
     }
     
     func classGet() -> TileClass {
@@ -78,7 +79,7 @@ class Tile {
             .anySatisfy({ neighbors[$0.0] == TILE_ID_NONE && neighbors[$0.1] == TILE_ID_NONE }) {
             return .corner
         }
-        if neighbors.anySatisfy({ $0 == -1 }) {
+        if neighbors.anySatisfy({ $0 == TILE_ID_NONE }) {
             return .frame
         }
         return .inside
@@ -109,28 +110,34 @@ class Tile {
         imageRotate(rot)
         if neighbors[EDGE_TOP] != topId {
             (neighbors[EDGE_TOP], neighbors[EDGE_BOTTOM]) = (neighbors[EDGE_BOTTOM], neighbors[EDGE_TOP])
-            imageRotate(-1) // Horizontal flip
+            imageHorizontalFlip()
         }
     }
-    
+
+    func imageHorizontalFlip() {
+    	 imageRotate(-1)
+    }
+
     // Rotate image 0, 90, 180 or 270 degrees, or do a horizonal flip
     func imageRotate(_ steps: Int) {
         var newImage: UInt64 = 0
         for y in 0..<TILE_IMAGE_DOTS {
             for x in 0..<TILE_IMAGE_DOTS {
-                let bit = ((1 << imageBitGet(x: x, y: y)) & image) == 0 ? 0 : 1
+                let bitVal = ((1 << imageBitGet(x: x, y: y)) & image) == 0 ? 0 : 1
+		var bitPos: Int
                 switch steps {
                 case 0: // 0 degrees
-                    newImage |= UInt64(bit) << imageBitGet(x: x, y: y)
+                    bitPos = imageBitGet(x: x, y: y)
                 case 1: // 90 degrees
-                    newImage |= UInt64(bit) << imageBitGet(x: y, y: TILE_IMAGE_DOTS - x - 1)
+                    bitPos = imageBitGet(x: y, y: TILE_IMAGE_DOTS - x - 1)
                 case 2: // 180 degrees
-                    newImage |= UInt64(bit) << imageBitGet(x: TILE_IMAGE_DOTS - x - 1, y: TILE_IMAGE_DOTS - y - 1)
+                    bitPos = imageBitGet(x: TILE_IMAGE_DOTS - x - 1, y: TILE_IMAGE_DOTS - y - 1)
                 case 3: // 270 degrees
-                    newImage |= UInt64(bit) << imageBitGet(x: TILE_IMAGE_DOTS - y - 1, y: x)
+                    bitPos = imageBitGet(x: TILE_IMAGE_DOTS - y - 1, y: x)
                 default: // horizontal flip
-                    newImage |= UInt64(bit) << imageBitGet(x: x, y: TILE_IMAGE_DOTS - y - 1)
+                    bitPos = imageBitGet(x: x, y: TILE_IMAGE_DOTS - y - 1)
                 }
+		newImage |= UInt64(bitVal) << bitPos
             }
         }
         image = newImage
@@ -139,7 +146,7 @@ class Tile {
     
 func imageBitGet(x: Int, y: Int) -> Int {
     let xOffset = x
-    let yOffset = y * (TILE_DOTS - 2)
+    let yOffset = y * TILE_IMAGE_DOTS
     return xOffset + yOffset
 }
 
@@ -176,7 +183,7 @@ struct Pos2D: Hashable {
     }
 }
 
-func seaMonstersGet(_ pos: Pos2D) -> [[Pos2D]] {
+func seaMonstersGet() -> [[Pos2D]] {
     let desc = ["                  # ",
                 "#    ##    ##    ###",
                 " #  #  #  #  #  #   "]
@@ -201,7 +208,7 @@ func seaMonstersGet(_ pos: Pos2D) -> [[Pos2D]] {
     images.append(image.map{ Pos2D(x: yMax - $0.y, y: $0.x) })
     images.append(image.map{ Pos2D(x: $0.y, y: xMax - $0.x) })
     images.append(image.map{ Pos2D(x: yMax - $0.y, y: xMax - $0.x) })
-    return images.map{ $0.map{ Pos2D(x: pos.x + $0.x, y: pos.y + $0.y) } }
+    return images
 }
 
 // Select one corner piece as top-left, rotate/flip the rest acording to that
@@ -242,7 +249,7 @@ func arrangeTiles(_ topLeft: Tile, _ tiles: Dictionary<TileId, Tile>) {
 
 // Generate a set of positions in the puzzle holding dot with "#"
 func render(_ topLeft: Tile, _ tiles: Dictionary<TileId, Tile>) -> Set<Pos2D> {
-    var something = Set<Pos2D>()
+    var puzzleImage = Set<Pos2D>()
     var tilePos = Pos2D(x: 0, y: 0)
     var tile = tiles[topLeft.id]!
     while true {
@@ -251,8 +258,8 @@ func render(_ topLeft: Tile, _ tiles: Dictionary<TileId, Tile>) -> Set<Pos2D> {
             for y in 0..<TILE_IMAGE_DOTS {
                 for x in 0..<TILE_IMAGE_DOTS {
                     if tile.image & (1 << imageBitGet(x: x, y: y)) != 0 {
-                        something.insert(Pos2D(x: tilePos.x * TILE_IMAGE_DOTS + x,
-                                               y: tilePos.y * TILE_IMAGE_DOTS + y))
+                        puzzleImage.insert(Pos2D(x: tilePos.x * TILE_IMAGE_DOTS + x,
+                                                 y: tilePos.y * TILE_IMAGE_DOTS + y))
                     }
                 }
             }
@@ -269,7 +276,7 @@ func render(_ topLeft: Tile, _ tiles: Dictionary<TileId, Tile>) -> Set<Pos2D> {
         tilePos.y += 1
         tile = tiles[leftCol.neighbors[EDGE_BOTTOM]]!
     }
-    return something
+    return puzzleImage
 }
 
 var tiles = splitIntoTiles(inputGet(keepEmpty: true)).map(Tile.init)
@@ -302,11 +309,11 @@ bench {
     //draw(image, width, height)
 
     // Remove matching dots from image for each found sea-monster
-    for y in 0..<height {
-        for x in 0..<width {
-            for seaMonster in seaMonstersGet(Pos2D(x: x, y: y)) {
-                if seaMonster.allSatisfy({ image.contains($0) }) {
-                    image.subtract(seaMonster)
+    for seaMonster in seaMonstersGet() {
+    	for y in 0..<height {
+            for x in 0..<width {
+                if seaMonster.allSatisfy({ image.contains(Pos2D(x: $0.x + x, y: $0.y + y)) }) {
+                    image.subtract(seaMonster.map{ Pos2D(x: $0.x + x, y: $0.y + y) })
                 }
             }
         }
