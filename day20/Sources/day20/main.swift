@@ -83,7 +83,8 @@ class Tile {
         }
         return .inside
     }
-    
+
+    // Find tiles where an edge matches one of the four edges on the "self" tile
     func fit(tile: inout Tile) {
         for (edgeId, neighId) in neighbors.enumerated() {
             if neighId == TILE_ID_NONE {

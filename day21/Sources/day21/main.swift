@@ -56,26 +56,26 @@ bench {
     var ingredientToAllergen = Array<(Ingredient, Allergen)>()
     // Contintune until every ingredient got an unique allergen association
     while !allergenToIngredients.isEmpty {
-        var unques = Array<(Ingredient, Allergen)>()
+        var uniques = Array<(Ingredient, Allergen)>()
         // Extract all ingredients with exactly one allergen
         for (allergen, ingredients) in allergenToIngredients {
             if ingredients.count == 1 {
-                unques.append((ingredients.first!, allergen))
+                uniques.append((ingredients.first!, allergen))
             }
         }
         // Remove ingredients with unique allergen assoication from remaining
         // allergen-to-ingredients mapping
-        for (ingredient, allergen) in unques {
+        for (ingredient, allergen) in uniques {
             allergenToIngredients.removeValue(forKey: allergen)
             for (k, v) in allergenToIngredients {
                 allergenToIngredients[k] = v.subtracting([ingredient])
             }
         }
-        ingredientToAllergen += unques
+        ingredientToAllergen += uniques
     }
     ingredientToAllergen.sort(by: { $0.1 < $1.1 })
     let canonicalDangerousIngredients = ingredientToAllergen
-        .map{$0.0}
+        .map{ $0.0 }
         .joined(separator: ",")
     print("🌟 Part 2 : \(canonicalDangerousIngredients)")
 }
