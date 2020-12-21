@@ -195,7 +195,7 @@ func seaMonstersGet(_ pos: Pos2D) -> [[Pos2D]] {
     images.append(image.map{ Pos2D(x: xMax - $0.x, y: $0.y) })
     images.append(image.map{ Pos2D(x: $0.x, y: yMax - $0.y) })
     images.append(image.map{ Pos2D(x: xMax - $0.x, y: yMax - $0.y) })
-    // Verical combinations
+    // Vertical combinations
     images.append(image.map{ Pos2D(x: $0.y, y: $0.x) })
     images.append(image.map{ Pos2D(x: yMax - $0.y, y: $0.x) })
     images.append(image.map{ Pos2D(x: $0.y, y: xMax - $0.x) })
@@ -203,7 +203,7 @@ func seaMonstersGet(_ pos: Pos2D) -> [[Pos2D]] {
     return images.map{ $0.map{ Pos2D(x: pos.x + $0.x, y: pos.y + $0.y) } }
 }
 
-// Select one corner piece as top-left, rotate/flip all pieces acording to that
+// Select one corner piece as top-left, rotate/flip the rest acording to that
 func arrangeTiles(_ topLeft: Tile, _ tiles: Dictionary<TileId, Tile>) {
     var tile = tiles[topLeft.id]!
     var leftId = TILE_ID_NONE
@@ -239,6 +239,7 @@ func arrangeTiles(_ topLeft: Tile, _ tiles: Dictionary<TileId, Tile>) {
     }
 }
 
+// Generate a set of positions in the puzzle holding dot with "#"
 func render(_ topLeft: Tile, _ tiles: Dictionary<TileId, Tile>) -> Set<Pos2D> {
     var something = Set<Pos2D>()
     var tilePos = Pos2D(x: 0, y: 0)
