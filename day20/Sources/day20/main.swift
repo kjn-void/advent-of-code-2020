@@ -181,6 +181,10 @@ struct Pos2D: Hashable {
     static func +(a: Pos2D, b: Pos2D) -> Pos2D {
         return Pos2D(x: a.x + b.x, y: a.y + b.y)
     }
+
+    static func -(a: Pos2D, b: Pos2D) -> Pos2D {
+        return Pos2D(x: a.x - b.x, y: a.y - b.y)
+    }
 }
 
 func seaMonstersGet() -> [[Pos2D]] {
@@ -208,7 +212,9 @@ func seaMonstersGet() -> [[Pos2D]] {
     images.append(image.map{ Pos2D(x: yMax - $0.y, y: $0.x) })
     images.append(image.map{ Pos2D(x: $0.y, y: xMax - $0.x) })
     images.append(image.map{ Pos2D(x: yMax - $0.y, y: xMax - $0.x) })
-    return images
+    // Transform each image so that the first dot is at Pos2d(x: 0, y: 0)
+    // as this make it possible to just test images against set puzzle dots
+    return images.map{ image in image.map{ $0 - image[0] } }
 }
 
 // Select one corner piece as top-left, rotate/flip the rest acording to that
@@ -303,18 +309,11 @@ bench {
     arrangeTiles(topLeft, tileMap)
 
     var image = render(topLeft, tileMap)
-    let width = image.max(by: { $0.x < $1.x })!.x
-    let height = image.max(by: { $0.y < $1.y })!.y
-
-    //draw(image, width, height)
-
     // Remove matching dots from image for each found sea-monster
     for seaMonster in seaMonstersGet() {
-    	for y in 0..<height {
-            for x in 0..<width {
-                if seaMonster.allSatisfy({ image.contains(Pos2D(x: $0.x + x, y: $0.y + y)) }) {
-                    image.subtract(seaMonster.map{ Pos2D(x: $0.x + x, y: $0.y + y) })
-                }
+    	for pos in image {
+            if seaMonster.allSatisfy({ image.contains(Pos2D(x: $0.x + pos.x, y: $0.y + pos.y)) }) {
+                image.subtract(seaMonster.map{ Pos2D(x: $0.x + pos.x, y: $0.y + pos.y) })
             }
         }
     }
@@ -323,7 +322,9 @@ bench {
 }
 
 // Debug, draw puzzle
-func draw(_ image: Set<Pos2D>, _ width: Int, _ height: Int) {
+func draw(_ image: Set<Pos2D>) {
+    let width = image.max(by: { $0.x < $1.x })!.x
+    let height = image.max(by: { $0.y < $1.y })!.y
     for y in 0..<height {
         for x in 0..<width {
             if image.contains(Pos2D(x: x, y: y)) {
